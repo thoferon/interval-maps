@@ -4,6 +4,8 @@ module Data.IntervalMap
   ( -- * Intervals
     IntervalBound(..)
   , Interval
+  , lowerBound
+  , upperBound
   , interval
 
     -- * Interval maps
@@ -20,6 +22,7 @@ module Data.IntervalMap
 import Prelude hiding (lookup)
 
 import Control.Monad (foldM, guard)
+import Data.Function (on)
 
 -- | Left or right bound of an interval.
 data IntervalBound b
@@ -32,6 +35,12 @@ data IntervalBound b
 data Interval b
   = Interval (IntervalBound b) (IntervalBound b)
   deriving (Eq, Show)
+
+lowerBound :: Interval b -> IntervalBound b
+lowerBound (Interval lb _) = lb
+
+upperBound :: Interval b -> IntervalBound b
+upperBound (Interval _ ub) = ub
 
 -- | Smart constructor for intervals which checks the bounds are not backward
 -- and the interval is not empty.
@@ -98,6 +107,12 @@ compareIntervals = curry $ \case
 data IntervalMap b a
   = Node Int (Interval b) a (IntervalMap b a) (IntervalMap b a)
   | Leaf
+
+instance (Show b, Show a) => Show (IntervalMap b a) where
+  show = show . toList
+
+instance (Eq b, Eq a) => Eq (IntervalMap b a) where
+  (==) = (==) `on` toList -- toList's result is sorted.
 
 -- | Empty interval map.
 empty :: IntervalMap b a
